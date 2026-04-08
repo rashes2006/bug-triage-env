@@ -1,3 +1,16 @@
+---
+title: Bug Triage Environment
+emoji: 🐞
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+sdk_version: "2.4.0"
+app_file: server/app.py
+pinned: false
+---
+
+Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
+
 # Bug Triage Environment 🐛
 
 > **OpenEnv** | Real-world software engineering | `easy → medium → hard`
