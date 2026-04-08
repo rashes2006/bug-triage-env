@@ -248,7 +248,7 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Bug Triage Environment — Baseline Inference")
     parser.add_argument(
         "--base-url",
-        default="http://localhost:8000",
+        default="http://localhost:7860",
         help="URL of the running environment server",
     )
     parser.add_argument(
@@ -279,14 +279,15 @@ def main(argv: list[str] | None = None) -> None:
     # Build Env client
     print(f"✅ Connecting to Environment at {args.base_url}")
 
-    with BugTriageEnv(base_url=args.base_url).sync() as env:
-        # Build LLM client
-        llm_client = None
-        if not args.dry_run:
-            if not OPENAI_AVAILABLE:
-                print("⚠️  openai package not installed. Falling back to dry-run mode.")
-                args.dry_run = True
-            else:
+    try:
+        with BugTriageEnv(base_url=args.base_url, connect_timeout_s=5.0).sync() as env:
+            # Build LLM client
+            llm_client = None
+            if not args.dry_run:
+                if not OPENAI_AVAILABLE:
+                    print("⚠️  openai package not installed. Falling back to dry-run mode.")
+                    args.dry_run = True
+                else:
                 api_key = os.getenv("OPENAI_API_KEY")
                 if not api_key:
                     print("⚠️  OPENAI_API_KEY not set. Falling back to dry-run mode.")
@@ -312,6 +313,11 @@ def main(argv: list[str] | None = None) -> None:
             )
             task_scores[task_id] = score
             time.sleep(0.5)  # brief pause between tasks
+
+    except Exception as e:
+        print(f"❌ Connection or unhandled environment error: {e}")
+        print("Please ensure compiling OpenEnv environments are reachable explicitly before running inference scripts.")
+        sys.exit(1)
 
     # Summary
     print(f"\n{'='*60}")
