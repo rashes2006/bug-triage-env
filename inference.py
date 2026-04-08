@@ -288,17 +288,17 @@ def main(argv: list[str] | None = None) -> None:
                     print("⚠️  openai package not installed. Falling back to dry-run mode.")
                     args.dry_run = True
                 else:
-                api_key = os.getenv("OPENAI_API_KEY")
-                if not api_key:
-                    print("⚠️  OPENAI_API_KEY not set. Falling back to dry-run mode.")
-                    args.dry_run = True
-                else:
-                    base_url = os.getenv("OPENAI_BASE_URL")
-                    llm_client = openai.OpenAI(
-                        api_key=api_key,
-                        **({"base_url": base_url} if base_url else {}),
-                    )
-                    print(f"✅ Using model: {args.model}")
+                    api_key = os.getenv("OPENAI_API_KEY")
+                    if not api_key:
+                        print("⚠️  OPENAI_API_KEY not set. Falling back to dry-run mode.")
+                        args.dry_run = True
+                    else:
+                        base_url = os.getenv("OPENAI_BASE_URL")
+                        llm_client = openai.OpenAI(
+                            api_key=api_key,
+                            **({"base_url": base_url} if base_url else {}),
+                        )
+                        print(f"✅ Using model: {args.model}")
 
         # Run tasks
         task_scores: dict[str, float] = {}
