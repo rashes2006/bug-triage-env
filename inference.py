@@ -286,7 +286,7 @@ def main(argv: list[str] | None = None) -> None:
     print(f"✅ Connecting to Environment at {args.base_url}")
 
     try:
-        with BugTriageEnv(base_url=args.base_url, connect_timeout_s=5.0).sync() as env:
+        with BugTriageEnv(base_url=args.base_url).sync() as env:
             # Build LLM client
             llm_client = None
             if not args.dry_run:
