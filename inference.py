@@ -198,6 +198,8 @@ def run_task(
     print(f"\n{'='*60}")
     print(f"  Task: {task_id.upper()}")
     print(f"{'='*60}")
+    
+    print(f"[START] task={task_id}", flush=True)
 
     step_result = env.reset(task_id=task_id, seed=seed)
     
@@ -232,6 +234,8 @@ def run_task(
         step_count += 1
 
         print(f"  Reward: {reward:.3f}")
+        print(f"[STEP] step={step_count} reward={reward}", flush=True)
+
         for line in feedback.splitlines():
             print(f"    {line}")
 
@@ -241,6 +245,8 @@ def run_task(
 
     mean_reward = total_reward / step_count if step_count > 0 else 0.0
     print(f"\n  ✅ Task complete. Steps={step_count}, Mean reward={mean_reward:.3f}")
+    print(f"[END] task={task_id} score={mean_reward} steps={step_count}", flush=True)
+    
     return mean_reward
 
 
