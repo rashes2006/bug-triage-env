@@ -1,0 +1,288 @@
+✅ Environment healthy at http://localhost:8000
+
+============================================================
+  Task: EASY
+============================================================
+
+  [Step 1] Bug: BUG-0003 — Kubernetes pod OOM-kills every ~6 hours — API server downtim
+  Action (random): priority=high, team=frontend
+  Reward: 0.000
+
+  [Step 2] Bug:  — 
+  Action (random): priority=low, team=infra
+  Reward: 0.000
+
+  [Step 3] Bug:  — 
+  Action (random): priority=medium, team=mobile
+  Reward: 0.000
+
+  [Step 4] Bug:  — 
+  Action (random): priority=medium, team=backend
+  Reward: 0.000
+
+  [Step 5] Bug:  — 
+  Action (random): priority=critical, team=mobile
+  Reward: 0.000
+
+  [Step 6] Bug:  — 
+  Action (random): priority=high, team=mobile
+  Reward: 0.000
+
+  [Step 7] Bug:  — 
+  Action (random): priority=low, team=backend
+  Reward: 0.000
+
+  [Step 8] Bug:  — 
+  Action (random): priority=high, team=infra
+  Reward: 0.000
+
+  [Step 9] Bug:  — 
+  Action (random): priority=critical, team=infra
+  Reward: 0.000
+
+  [Step 10] Bug:  — 
+  Action (random): priority=critical, team=infra
+  Reward: 0.000
+
+  [Step 11] Bug:  — 
+  Action (random): priority=medium, team=mobile
+  Reward: 0.000
+
+  [Step 12] Bug:  — 
+  Action (random): priority=low, team=backend
+  Reward: 0.000
+
+  [Step 13] Bug:  — 
+  Action (random): priority=medium, team=mobile
+  Reward: 0.000
+
+  [Step 14] Bug:  — 
+  Action (random): priority=high, team=security
+  Reward: 0.000
+
+  [Step 15] Bug:  — 
+  Action (random): priority=critical, team=data
+  Reward: 0.000
+
+  [Step 16] Bug:  — 
+  Action (random): priority=critical, team=frontend
+  Reward: 0.000
+
+  [Step 17] Bug:  — 
+  Action (random): priority=low, team=security
+  Reward: 0.000
+
+  [Step 18] Bug:  — 
+  Action (random): priority=low, team=frontend
+  Reward: 0.000
+
+  [Step 19] Bug:  — 
+  Action (random): priority=low, team=backend
+  Reward: 0.000
+
+  [Step 20] Bug:  — 
+  Action (random): priority=critical, team=frontend
+  Reward: 0.000
+
+  [Step 21] Bug:  — 
+  Action (random): priority=critical, team=security
+  Reward: 0.000
+  ⚠️  Exceeded max steps safety guard
+
+  ✅ Task complete. Steps=21, Mean reward=0.000
+
+============================================================
+  Task: MEDIUM
+============================================================
+
+  [Step 1] Bug: BUG-0012 — Recommendation model returns stale embeddings after daily re
+  Action (random): priority=medium, team=security
+  Reward: 0.000
+
+  [Step 2] Bug:  — 
+  Action (random): priority=medium, team=security
+  Reward: 0.000
+
+  [Step 3] Bug:  — 
+  Action (random): priority=low, team=data
+  Reward: 0.000
+
+  [Step 4] Bug:  — 
+  Action (random): priority=high, team=security
+  Reward: 0.000
+
+  [Step 5] Bug:  — 
+  Action (random): priority=critical, team=mobile
+  Reward: 0.000
+
+  [Step 6] Bug:  — 
+  Action (random): priority=medium, team=security
+  Reward: 0.000
+
+  [Step 7] Bug:  — 
+  Action (random): priority=critical, team=infra
+  Reward: 0.000
+
+  [Step 8] Bug:  — 
+  Action (random): priority=low, team=frontend
+  Reward: 0.000
+
+  [Step 9] Bug:  — 
+  Action (random): priority=high, team=backend
+  Reward: 0.000
+
+  [Step 10] Bug:  — 
+  Action (random): priority=high, team=frontend
+  Reward: 0.000
+
+  [Step 11] Bug:  — 
+  Action (random): priority=low, team=security
+  Reward: 0.000
+
+  [Step 12] Bug:  — 
+  Action (random): priority=low, team=backend
+  Reward: 0.000
+
+  [Step 13] Bug:  — 
+  Action (random): priority=high, team=data
+  Reward: 0.000
+
+  [Step 14] Bug:  — 
+  Action (random): priority=critical, team=infra
+  Reward: 0.000
+
+  [Step 15] Bug:  — 
+  Action (random): priority=critical, team=data
+  Reward: 0.000
+
+  [Step 16] Bug:  — 
+  Action (random): priority=low, team=mobile
+  Reward: 0.000
+
+  [Step 17] Bug:  — 
+  Action (random): priority=medium, team=backend
+  Reward: 0.000
+
+  [Step 18] Bug:  — 
+  Action (random): priority=medium, team=data
+  Reward: 0.000
+
+  [Step 19] Bug:  — 
+  Action (random): priority=low, team=mobile
+  Reward: 0.000
+
+  [Step 20] Bug:  — 
+  Action (random): priority=high, team=mobile
+  Reward: 0.000
+
+  [Step 21] Bug:  — 
+  Action (random): priority=low, team=mobile
+  Reward: 0.000
+  ⚠️  Exceeded max steps safety guard
+
+  ✅ Task complete. Steps=21, Mean reward=0.000
+
+============================================================
+  Task: HARD
+============================================================
+
+  [Step 1] Bug: BUG-0022 — Dashboard loads 4× slower than last month — no obvious code 
+  Action (random): priority=high, team=mobile
+  Reward: 0.000
+
+  [Step 2] Bug:  — 
+  Action (random): priority=high, team=mobile
+  Reward: 0.000
+
+  [Step 3] Bug:  — 
+  Action (random): priority=critical, team=frontend
+  Reward: 0.000
+
+  [Step 4] Bug:  — 
+  Action (random): priority=medium, team=data
+  Reward: 0.000
+
+  [Step 5] Bug:  — 
+  Action (random): priority=medium, team=mobile
+  Reward: 0.000
+
+  [Step 6] Bug:  — 
+  Action (random): priority=medium, team=frontend
+  Reward: 0.000
+
+  [Step 7] Bug:  — 
+  Action (random): priority=medium, team=data
+  Reward: 0.000
+
+  [Step 8] Bug:  — 
+  Action (random): priority=low, team=backend
+  Reward: 0.000
+
+  [Step 9] Bug:  — 
+  Action (random): priority=low, team=security
+  Reward: 0.000
+
+  [Step 10] Bug:  — 
+  Action (random): priority=high, team=mobile
+  Reward: 0.000
+
+  [Step 11] Bug:  — 
+  Action (random): priority=high, team=data
+  Reward: 0.000
+
+  [Step 12] Bug:  — 
+  Action (random): priority=low, team=frontend
+  Reward: 0.000
+
+  [Step 13] Bug:  — 
+  Action (random): priority=medium, team=backend
+  Reward: 0.000
+
+  [Step 14] Bug:  — 
+  Action (random): priority=low, team=backend
+  Reward: 0.000
+
+  [Step 15] Bug:  — 
+  Action (random): priority=critical, team=frontend
+  Reward: 0.000
+
+  [Step 16] Bug:  — 
+  Action (random): priority=high, team=frontend
+  Reward: 0.000
+
+  [Step 17] Bug:  — 
+  Action (random): priority=high, team=backend
+  Reward: 0.000
+
+  [Step 18] Bug:  — 
+  Action (random): priority=low, team=security
+  Reward: 0.000
+
+  [Step 19] Bug:  — 
+  Action (random): priority=medium, team=infra
+  Reward: 0.000
+
+  [Step 20] Bug:  — 
+  Action (random): priority=critical, team=data
+  Reward: 0.000
+
+  [Step 21] Bug:  — 
+  Action (random): priority=high, team=backend
+  Reward: 0.000
+  ⚠️  Exceeded max steps safety guard
+
+  ✅ Task complete. Steps=21, Mean reward=0.000
+
+============================================================
+  BASELINE SCORES SUMMARY
+============================================================
+  Model:  random
+  Seed:   42
+
+  easy     0.000  
+  medium   0.000  
+  hard     0.000  
+
+  Overall mean: 0.000
+============================================================
+BASELINE_EXIT_CODE=0

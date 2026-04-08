@@ -1,0 +1,44 @@
+✅ Connecting to Environment at http://localhost:8000
+✅ Using model: gpt-4o-mini
+
+============================================================
+  Task: EASY
+============================================================
+
+  [Step 1] Bug: BUG-0003 — Kubernetes pod OOM-kills every ~6 hours — API server downtim
+Traceback (most recent call last):
+  File "/Users/rashestripathy/Documents/metahackathon round 1/baseline.py", line 333, in <module>
+    main()
+    ~~~~^^
+  File "/Users/rashestripathy/Documents/metahackathon round 1/baseline.py", line 305, in main
+    score = run_task(
+        env=env,
+    ...<4 lines>...
+        seed=args.seed,
+    )
+  File "/Users/rashestripathy/Documents/metahackathon round 1/baseline.py", line 221, in run_task
+    raw_action = call_llm(llm_client, model, obs_dict)
+  File "/Users/rashestripathy/Documents/metahackathon round 1/baseline.py", line 132, in call_llm
+    response = client.chat.completions.create(
+        model=model,
+    ...<5 lines>...
+        seed=42,
+    )
+  File "/Users/rashestripathy/Documents/metahackathon round 1/.venv/lib/python3.14/site-packages/openai/_utils/_utils.py", line 286, in wrapper
+    return func(*args, **kwargs)
+  File "/Users/rashestripathy/Documents/metahackathon round 1/.venv/lib/python3.14/site-packages/openai/resources/chat/completions/completions.py", line 1211, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<47 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/rashestripathy/Documents/metahackathon round 1/.venv/lib/python3.14/site-packages/openai/_base_client.py", line 1297, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/rashestripathy/Documents/metahackathon round 1/.venv/lib/python3.14/site-packages/openai/_base_client.py", line 1070, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.RateLimitError: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}

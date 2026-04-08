@@ -1,0 +1,26 @@
+spec_version: 1
+name: bug_triage_env
+type: space
+runtime: fastapi
+app: server.app:app
+port: 8000
+description: >
+  A real-world bug triage environment where AI agents learn to read GitHub/Jira-style
+  bug reports and make structured triage decisions (priority, labels, team assignment,
+  escalation). Includes 3 tasks ranging from easy (unambiguous security bug) to hard
+  (ambiguous performance regression with conflicting signals).
+tags:
+  - bug-triage
+  - software-engineering
+  - nlp
+  - openenv
+tasks:
+  - id: easy
+    description: Single unambiguous bug report with clear signals
+    max_steps: 1
+  - id: medium
+    description: Three bugs requiring log analysis and multi-team reasoning
+    max_steps: 3
+  - id: hard
+    description: Three ambiguous bugs with conflicting evidence
+    max_steps: 3

@@ -1,0 +1,47 @@
+✅ Environment healthy at http://localhost:8000
+
+============================================================
+  Task: EASY
+============================================================
+
+  [Step 1] Bug: BUG-0003 — Kubernetes pod OOM-kills every ~6 hours — API server downtim
+  Action (random): priority=medium, team=mobile
+  Reward: 0.000
+    No bug to triage. Call reset() first.
+
+  ✅ Task complete. Steps=1, Mean reward=0.000
+
+============================================================
+  Task: MEDIUM
+============================================================
+
+  [Step 1] Bug: BUG-0012 — Recommendation model returns stale embeddings after daily re
+  Action (random): priority=low, team=security
+  Reward: 0.000
+    No bug to triage. Call reset() first.
+
+  ✅ Task complete. Steps=1, Mean reward=0.000
+
+============================================================
+  Task: HARD
+============================================================
+
+  [Step 1] Bug: BUG-0022 — Dashboard loads 4× slower than last month — no obvious code 
+  Action (random): priority=high, team=data
+  Reward: 0.000
+    No bug to triage. Call reset() first.
+
+  ✅ Task complete. Steps=1, Mean reward=0.000
+
+============================================================
+  BASELINE SCORES SUMMARY
+============================================================
+  Model:  random
+  Seed:   42
+
+  easy     0.000  
+  medium   0.000  
+  hard     0.000  
+
+  Overall mean: 0.000
+============================================================

@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openenv-bug-triage-env"
+version = "0.1.0"
+description = "Bug Triage Environment for OpenEnv — agents learn to triage GitHub/Jira-style bug reports"
+requires-python = ">=3.10"
+dependencies = [
+    # Core OpenEnv framework
+    "openenv-core[core] @ git+https://github.com/meta-pytorch/OpenEnv.git@v0.2.3",
+    # Server stack
+    "fastapi>=0.115.0",
+    "pydantic>=2.0.0",
+    "uvicorn>=0.24.0",
+    # Client & scripting
+    "requests>=2.31.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.23.0",
+]
+inference = [
+    "openai>=1.0.0",
+]
+
+[project.scripts]
+server = "bug_triage_env.server.app:main"
+
+[tool.setuptools]
+include-package-data = true
+packages = ["bug_triage_env", "bug_triage_env.server"]
+package-dir = { "bug_triage_env" = ".", "bug_triage_env.server" = "server" }

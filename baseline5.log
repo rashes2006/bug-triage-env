@@ -1,0 +1,94 @@
+✅ Connecting to Environment at http://localhost:8000
+
+============================================================
+  Task: EASY
+============================================================
+
+  [Step 1] Bug: BUG-0003 — Kubernetes pod OOM-kills every ~6 hours — API server downtim
+  Action (random): priority=critical, team=mobile
+  Reward: 0.150
+    ⚠️  Priority off by one level: got 'critical', expected 'high'
+    ❌ Team wrong: got 'mobile', expected 'backend'
+    ⚠️  Labels F1=0.00 — missing: ['bug', 'memory-leak'], extra: ['api', 'flaky-test']
+    ❌ Should NOT have escalated
+    
+    Episode complete. Steps=1, Mean reward=0.150
+
+  ✅ Task complete. Steps=1, Mean reward=0.150
+
+============================================================
+  Task: MEDIUM
+============================================================
+
+  [Step 1] Bug: BUG-0012 — Recommendation model returns stale embeddings after daily re
+  Action (random): priority=medium, team=data
+  Reward: 0.875
+    ✅ Priority correct: 'medium'
+    ✅ Team correct: 'data'
+    ⚠️  Labels F1=0.50 — correct labels: ['bug'], missing: ['performance'], extra: ['crash']
+    ✅ Escalation correct: False
+
+  [Step 2] Bug: BUG-0010 — Export to CSV silently drops rows when dataset > 50 k record
+  Action (random): priority=high, team=infra
+  Reward: 0.433
+    ✅ Priority correct: 'high'
+    ❌ Team wrong: got 'infra', expected 'backend'
+    ⚠️  Labels F1=0.33 — correct labels: ['data-loss'], missing: ['api', 'bug'], extra: ['crash', 'security']
+    ❌ Should NOT have escalated
+
+  [Step 3] Bug: BUG-0011 — Push notifications not delivered on Android 14 in battery-sa
+  Action (random): priority=medium, team=data
+  Reward: 0.450
+    ✅ Priority correct: 'medium'
+    ❌ Team wrong: got 'data', expected 'mobile'
+    ⚠️  Labels F1=0.40 — correct labels: ['ux'], missing: ['bug'], extra: ['needs-repro', 'security']
+    ❌ Should NOT have escalated
+    
+    Episode complete. Steps=3, Mean reward=0.586
+
+  ✅ Task complete. Steps=3, Mean reward=0.586
+
+============================================================
+  Task: HARD
+============================================================
+
+  [Step 1] Bug: BUG-0022 — Dashboard loads 4× slower than last month — no obvious code 
+  Action (random): priority=low, team=backend
+  Reward: 0.350
+    ❌ Priority wrong: got 'low', expected 'high'
+    ❌ Team wrong: got 'backend', expected 'infra'
+    ⚠️  Labels F1=0.80 — correct labels: ['performance', 'regression'], extra: ['documentation']
+    ✅ Escalation correct: False
+
+  [Step 2] Bug: BUG-0020 — Intermittent 500 errors on checkout — affects ~0.3% of trans
+  Action (random): priority=critical, team=mobile
+  Reward: 0.150
+    ⚠️  Priority off by one level: got 'critical', expected 'high'
+    ❌ Team wrong: got 'mobile', expected 'backend'
+    ⚠️  Labels F1=0.00 — missing: ['bug', 'performance', 'regression'], extra: ['data-loss', 'documentation', 'security']
+    ❌ Should have escalated
+
+  [Step 3] Bug: BUG-0021 — User reports their account data was 'gone' after profile upd
+  Action (random): priority=high, team=security
+  Reward: 0.400
+    ⚠️  Priority off by one level: got 'high', expected 'medium'
+    ❌ Team wrong: got 'security', expected 'backend'
+    ⚠️  Labels F1=0.40 — correct labels: ['bug'], missing: ['needs-repro'], extra: ['api', 'security']
+    ✅ Escalation correct: False
+    
+    Episode complete. Steps=3, Mean reward=0.300
+
+  ✅ Task complete. Steps=3, Mean reward=0.300
+
+============================================================
+  BASELINE SCORES SUMMARY
+============================================================
+  Model:  random
+  Seed:   42
+
+  easy     0.150  ███
+  medium   0.586  ███████████
+  hard     0.300  ██████
+
+  Overall mean: 0.345
+============================================================
