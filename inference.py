@@ -1,30 +1,24 @@
 """
-Baseline inference script for the Bug Triage Environment.
+Inference script for the Bug Triage Environment.
 
-Uses the OpenAI API to run a model against all 3 tasks and reports
-reproducible baseline scores.
+Calls BugTriageEnvironment DIRECTLY (no HTTP/WebSocket) so it works
+both inside the hackathon validator container and in local testing.
+
+Environment variables (injected by hackathon LiteLLM proxy):
+  API_KEY          - LLM proxy key  (fallback: OPENAI_API_KEY)
+  API_BASE_URL     - LLM proxy URL  (fallback: OPENAI_BASE_URL)
+  OPENAI_MODEL     - model name     (default: gpt-4o-mini)
 
 Usage
 -----
-    # Set credentials:
-    export OPENAI_API_KEY="sk-..."
-    export OPENAI_BASE_URL="https://api.openai.com/v1"   # optional
-    export OPENAI_MODEL="gpt-4o-mini"                    # optional
-
-    # Run against a locally running server:
-    python baseline.py --base-url http://localhost:8000
-
-    # Run against a Hugging Face Space:
-    python baseline.py --base-url https://<your-hf-space>.hf.space
-
     # Dry-run (random actions, no API key needed):
-    python baseline.py --base-url http://localhost:8000 --dry-run
+    python inference.py --dry-run
 
-Expected approximate baseline scores (gpt-4o-mini, seed=42)
--------------------------------------------------------------
-  easy   : ~0.85
-  medium : ~0.72
-  hard   : ~0.55
+    # Real LLM via hackathon proxy:
+    API_KEY=<key> API_BASE_URL=<url> python inference.py
+
+    # Override tasks:
+    python inference.py --tasks easy --dry-run
 """
 
 from __future__ import annotations
@@ -37,6 +31,16 @@ import sys
 import time
 
 # ---------------------------------------------------------------------------
+# Adjust sys.path so `models` and `server` are importable when the script
+# is run from /tmp/workspace (hackathon validator) or from the project root.
+# ---------------------------------------------------------------------------
+import pathlib
+
+_HERE = pathlib.Path(__file__).parent.resolve()
+if str(_HERE) not in sys.path:
+    sys.path.insert(0, str(_HERE))
+
+# ---------------------------------------------------------------------------
 # Try to import openai; graceful fallback for dry-run mode
 # ---------------------------------------------------------------------------
 try:
@@ -46,13 +50,15 @@ except ImportError:
     OPENAI_AVAILABLE = False
 
 # ---------------------------------------------------------------------------
-# Try to import the environment client; fall back to pure HTTP requests
+# Import the environment directly — no network required
 # ---------------------------------------------------------------------------
 try:
-    import requests
-    REQUESTS_AVAILABLE = True
-except ImportError:
-    REQUESTS_AVAILABLE = False
+    from server.bug_triage_environment import BugTriageEnvironment
+    from models import TriageAction
+    ENV_AVAILABLE = True
+except Exception as _env_import_err:  # noqa: BLE001
+    ENV_AVAILABLE = False
+    _ENV_IMPORT_ERR = _env_import_err
 
 
 # ---------------------------------------------------------------------------
@@ -107,39 +113,38 @@ Attachments:
 
 
 # ---------------------------------------------------------------------------
-# API helpers
+# LLM helper
 # ---------------------------------------------------------------------------
 
-from client import BugTriageEnv
-from models import TriageAction
-
-
-def call_llm(client: "openai.OpenAI", model: str, bug_obs: dict) -> dict:
+def call_llm(client: "openai.OpenAI", model: str, obs) -> dict:
     """Call the LLM and parse the JSON triage decision."""
-    attachments_text = "\n".join(bug_obs.get("attachments", [])) or "(none)"
-    env_text = json.dumps(bug_obs.get("environment", {}))
+    attachments_text = "\n".join(getattr(obs, "attachments", [])) or "(none)"
+    env_text = json.dumps(getattr(obs, "environment", {}))
 
     user_msg = USER_PROMPT_TEMPLATE.format(
-        bug_id=bug_obs.get("bug_id", ""),
-        title=bug_obs.get("title", ""),
-        reporter=bug_obs.get("reporter", ""),
-        created_at=bug_obs.get("created_at", ""),
+        bug_id=getattr(obs, "bug_id", ""),
+        title=getattr(obs, "title", ""),
+        reporter=getattr(obs, "reporter", ""),
+        created_at=getattr(obs, "created_at", ""),
         environment=env_text,
-        description=bug_obs.get("description", ""),
+        description=getattr(obs, "description", ""),
         attachments=attachments_text,
     )
 
-    response = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_msg},
-        ],
-        temperature=0.0,
-        seed=42,
-    )
-
-    raw_text = response.choices[0].message.content.strip()
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_msg},
+            ],
+            temperature=0.0,
+            seed=42,
+        )
+        raw_text = response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"  ⚠️  LLM call failed: {e}", flush=True)
+        return _fallback_action()
 
     # Strip optional markdown fences
     if raw_text.startswith("```"):
@@ -149,167 +154,160 @@ def call_llm(client: "openai.OpenAI", model: str, bug_obs: dict) -> dict:
     try:
         action = json.loads(raw_text)
     except json.JSONDecodeError as exc:
-        print(f"  ⚠️  LLM returned invalid JSON: {exc}\n  Raw: {raw_text[:200]}")
-        action = {
-            "priority": "medium",
-            "labels": ["bug"],
-            "assigned_team": "backend",
-            "needs_escalation": False,
-            "comment": "Fallback — could not parse LLM response.",
-        }
+        print(f"  ⚠️  LLM returned invalid JSON: {exc}\n  Raw: {raw_text[:200]}", flush=True)
+        return _fallback_action()
 
-    # Sanitise
+    return _sanitise(action)
+
+
+def _fallback_action() -> dict:
+    return {
+        "priority": "medium",
+        "labels": ["bug"],
+        "assigned_team": "backend",
+        "needs_escalation": False,
+        "comment": "Fallback — could not get a valid LLM response.",
+    }
+
+
+def _sanitise(action: dict) -> dict:
     if action.get("priority") not in VALID_PRIORITIES:
         action["priority"] = "medium"
-    action["labels"] = [l for l in action.get("labels", []) if l in VALID_LABELS] or ["bug"]
+    action["labels"] = [la for la in action.get("labels", []) if la in VALID_LABELS] or ["bug"]
     if action.get("assigned_team") not in VALID_TEAMS:
         action["assigned_team"] = "backend"
     if not isinstance(action.get("needs_escalation"), bool):
         action["needs_escalation"] = False
-
     return action
 
 
 def random_action() -> dict:
-    """Generate a random valid action (used in dry-run mode)."""
     rng = random.Random()
-    return {
+    return _sanitise({
         "priority": rng.choice(VALID_PRIORITIES),
         "labels": rng.sample(VALID_LABELS, k=rng.randint(1, 3)),
         "assigned_team": rng.choice(VALID_TEAMS),
         "needs_escalation": rng.random() > 0.7,
         "comment": "random baseline action",
-    }
+    })
 
 
 # ---------------------------------------------------------------------------
-# Main runner
+# Task runner
 # ---------------------------------------------------------------------------
 
 def run_task(
-    env: Any,
+    env: "BugTriageEnvironment",
     task_id: str,
     llm_client: "openai.OpenAI | None",
     model: str,
     dry_run: bool,
     seed: int = 42,
 ) -> float:
-    """Run one task to completion and return mean reward."""
-    print(f"\n{'='*60}")
-    print(f"  Task: {task_id.upper()}")
-    print(f"{'='*60}")
-    
+    """Run one task episode and return mean reward."""
+    print(f"\n{'='*60}", flush=True)
+    print(f"  Task: {task_id.upper()}", flush=True)
+    print(f"{'='*60}", flush=True)
     print(f"[START] task={task_id}", flush=True)
 
-    step_result = env.reset(task_id=task_id, seed=seed)
-    
-    obs = step_result.observation
-    done = step_result.done
+    obs = env.reset(task_id=task_id, seed=seed)
 
     total_reward = 0.0
     step_count = 0
 
-    while not done:
+    while not getattr(obs, "done", False):
         bug_id = getattr(obs, "bug_id", "?")
         title = getattr(obs, "title", "(no title)")
-        print(f"\n  [Step {step_count+1}] Bug: {bug_id} — {title[:60]}")
+        print(f"\n  [Step {step_count+1}] Bug: {bug_id} — {title[:60]}", flush=True)
 
         if dry_run or llm_client is None:
-            raw_action = random_action()
-            action = TriageAction(**raw_action)
-            print(f"  Action (random): priority={action.priority}, team={action.assigned_team}")
+            raw = random_action()
+            print(f"  Action (random): priority={raw['priority']}, team={raw['assigned_team']}", flush=True)
         else:
-            obs_dict = obs.model_dump()
-            raw_action = call_llm(llm_client, model, obs_dict)
-            action = TriageAction(**raw_action)
-            print(f"  Action (LLM):    priority={action.priority}, team={action.assigned_team}, escalate={action.needs_escalation}")
+            raw = call_llm(llm_client, model, obs)
+            print(f"  Action (LLM): priority={raw['priority']}, team={raw['assigned_team']}, escalate={raw['needs_escalation']}", flush=True)
 
-        step_result = env.step(action)
-        reward = step_result.reward or 0.0
-        obs = step_result.observation
+        try:
+            action = TriageAction(**raw)
+            obs = env.step(action)
+        except Exception as e:
+            print(f"  ⚠️  Step failed: {e}", flush=True)
+            break
+
+        reward = getattr(obs, "reward", 0.0) or 0.0
         feedback = getattr(obs, "feedback", "")
-        done = step_result.done
-
-        total_reward += reward
         step_count += 1
+        total_reward += reward
 
-        print(f"  Reward: {reward:.3f}")
+        print(f"  Reward: {reward:.3f}", flush=True)
         print(f"[STEP] step={step_count} reward={reward}", flush=True)
-
         for line in feedback.splitlines():
-            print(f"    {line}")
+            print(f"    {line}", flush=True)
 
-        if step_count > 20:  # safety guard
-            print("  ⚠️  Exceeded max steps safety guard")
+        if step_count > 20:
+            print("  ⚠️  Safety guard: exceeded max steps", flush=True)
             break
 
     mean_reward = total_reward / step_count if step_count > 0 else 0.0
-    print(f"\n  ✅ Task complete. Steps={step_count}, Mean reward={mean_reward:.3f}")
+    print(f"\n  ✅ Task complete. Steps={step_count}, Mean reward={mean_reward:.3f}", flush=True)
     print(f"[END] task={task_id} score={mean_reward} steps={step_count}", flush=True)
-    
     return mean_reward
 
 
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
 def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(description="Bug Triage Environment — Baseline Inference")
-    parser.add_argument(
-        "--base-url",
-        default="http://localhost:7860",
-        help="URL of the running environment server",
-    )
-    parser.add_argument(
-        "--model",
-        default=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
-        help="OpenAI model name",
-    )
-    parser.add_argument(
-        "--seed",
-        type=int,
-        default=42,
-        help="Random seed for reproducibility",
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Use random actions instead of calling the OpenAI API",
-    )
-    parser.add_argument(
-        "--tasks",
-        nargs="+",
-        default=["easy", "medium", "hard"],
-        choices=["easy", "medium", "hard"],
-        help="Which tasks to run",
-    )
+    parser = argparse.ArgumentParser(description="Bug Triage Environment — Inference")
+    parser.add_argument("--model", default=os.getenv("OPENAI_MODEL", "gpt-4o-mini"))
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Use random actions (no LLM needed)")
+    parser.add_argument("--tasks", nargs="+", default=["easy", "medium", "hard"],
+                        choices=["easy", "medium", "hard"])
     args = parser.parse_args(argv)
 
-    # Build Env client
-    print(f"✅ Connecting to Environment at {args.base_url}")
+    # ------------------------------------------------------------------
+    # Guard: environment must be importable
+    # ------------------------------------------------------------------
+    if not ENV_AVAILABLE:
+        print(f"❌ Could not import BugTriageEnvironment: {_ENV_IMPORT_ERR}", flush=True)
+        sys.exit(1)
 
-    try:
-        with BugTriageEnv(base_url=args.base_url).sync() as env:
-            # Build LLM client
-            llm_client = None
-            if not args.dry_run:
-                if not OPENAI_AVAILABLE:
-                    print("⚠️  openai package not installed. Falling back to dry-run mode.")
-                    args.dry_run = True
-                else:
-                    # Prefer hackathon-injected proxy creds; fall back to OPENAI_* vars
-                    api_key = os.getenv("API_KEY") or os.getenv("OPENAI_API_KEY")
-                    base_url = os.getenv("API_BASE_URL") or os.getenv("OPENAI_BASE_URL")
-                    if not api_key:
-                        print("⚠️  No API key found (API_KEY / OPENAI_API_KEY). Falling back to dry-run mode.")
-                        args.dry_run = True
-                    else:
-                        llm_client = openai.OpenAI(
-                            api_key=api_key,
-                            **({"base_url": base_url} if base_url else {}),
-                        )
-                        print(f"✅ Using model: {args.model} via {base_url or 'default OpenAI'}")
+    # ------------------------------------------------------------------
+    # Build LLM client (uses hackathon-injected proxy creds first)
+    # ------------------------------------------------------------------
+    llm_client = None
+    if not args.dry_run:
+        if not OPENAI_AVAILABLE:
+            print("⚠️  openai not installed — falling back to dry-run mode.", flush=True)
+            args.dry_run = True
+        else:
+            api_key = os.getenv("API_KEY") or os.getenv("OPENAI_API_KEY")
+            base_url = os.getenv("API_BASE_URL") or os.getenv("OPENAI_BASE_URL")
+            if not api_key:
+                print("⚠️  No API key set — falling back to dry-run mode.", flush=True)
+                args.dry_run = True
+            else:
+                llm_client = openai.OpenAI(
+                    api_key=api_key,
+                    **({"base_url": base_url} if base_url else {}),
+                )
+                print(f"✅ Using model: {args.model} via {base_url or 'OpenAI default'}", flush=True)
 
-        # Run tasks
-        task_scores: dict[str, float] = {}
-        for task_id in args.tasks:
+    # ------------------------------------------------------------------
+    # Instantiate environment directly — no network, no WebSocket
+    # ------------------------------------------------------------------
+    env = BugTriageEnvironment()
+    print("✅ BugTriageEnvironment instantiated directly.", flush=True)
+
+    # ------------------------------------------------------------------
+    # Run tasks
+    # ------------------------------------------------------------------
+    task_scores: dict[str, float] = {}
+    for task_id in args.tasks:
+        try:
             score = run_task(
                 env=env,
                 task_id=task_id,
@@ -318,28 +316,28 @@ def main(argv: list[str] | None = None) -> None:
                 dry_run=args.dry_run,
                 seed=args.seed,
             )
-            task_scores[task_id] = score
-            time.sleep(0.5)  # brief pause between tasks
+        except Exception as e:
+            print(f"❌ Task '{task_id}' failed: {e}", flush=True)
+            score = 0.0
+            print(f"[END] task={task_id} score={score} steps=0", flush=True)
+        task_scores[task_id] = score
+        time.sleep(0.2)
 
-    except Exception as e:
-        print(f"❌ Connection or unhandled environment error: {e}")
-        print("Please ensure compiling OpenEnv environments are reachable explicitly before running inference scripts.")
-        sys.exit(1)
-
+    # ------------------------------------------------------------------
     # Summary
-    print(f"\n{'='*60}")
-    print("  BASELINE SCORES SUMMARY")
-    print(f"{'='*60}")
-    print(f"  Model:  {'random' if args.dry_run else args.model}")
-    print(f"  Seed:   {args.seed}")
-    print()
-    for task_id, score in task_scores.items():
-        bar = "█" * int(score * 20)
-        print(f"  {task_id:<8} {score:.3f}  {bar}")
-    print()
+    # ------------------------------------------------------------------
+    print(f"\n{'='*60}", flush=True)
+    print("  BASELINE SCORES SUMMARY", flush=True)
+    print(f"{'='*60}", flush=True)
+    print(f"  Model : {'random' if args.dry_run else args.model}", flush=True)
+    print(f"  Seed  : {args.seed}", flush=True)
+    print(flush=True)
+    for tid, sc in task_scores.items():
+        bar = "█" * int(sc * 20)
+        print(f"  {tid:<8} {sc:.3f}  {bar}", flush=True)
     overall = sum(task_scores.values()) / len(task_scores) if task_scores else 0.0
-    print(f"  Overall mean: {overall:.3f}")
-    print(f"{'='*60}")
+    print(f"\n  Overall mean: {overall:.3f}", flush=True)
+    print(f"{'='*60}", flush=True)
 
 
 if __name__ == "__main__":
