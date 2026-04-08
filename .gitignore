@@ -1,0 +1,27 @@
+# Logs
+*.log
+baseline*.log
+server*.log
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment configurations
+.pytest_cache/
+
+# Distributions
+*.egg-info/
+.eggs/
+dist/
+build/
